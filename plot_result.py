@@ -68,12 +68,15 @@ def plot_labels(labels, names, save_dir):
     # matplotlib labels
     matplotlib.use('svg')  # faster
     ax = plt.subplots(2, 2, figsize=(8, 8), tight_layout=True)[1].ravel()
-    y = ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
+    #y = ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
+    y = ax[0].hist(c, bins=np.linspace(0, 2, 2 + 1) - 0.5, rwidth=0.4)
     # [y[2].patches[i].set_color([x / 255 for x in colors(i)]) for i in range(nc)]  # update colors bug #3195
     ax[0].set_ylabel('instances')
     if 0 < len(names) < 30:
-        ax[0].set_xticks(range(len(names)))
-        ax[0].set_xticklabels(names, rotation=90, fontsize=10)
+        #ax[0].set_xticks(range(len(names)))
+        #ax[0].set_xticklabels(names, rotation=90, fontsize=10)
+        ax[0].set_xticks(np.arange(2))
+        ax[0].set_xticklabels(['car', 'pedestrian'], rotation=90, fontsize=10)
     else:
         ax[0].set_xlabel('classes')
     sn.histplot(x, x='x', y='y', ax=ax[2], bins=50, pmax=0.9)
@@ -92,7 +95,7 @@ def plot_labels(labels, names, save_dir):
         for s in ['top', 'right', 'left', 'bottom']:
             ax[a].spines[s].set_visible(False)
 
-    plt.savefig(save_dir + 'labels.jpg', dpi=200)
+    plt.savefig(save_dir + 'pred_carla_augmented_labels.jpg', dpi=200)
     matplotlib.use('Agg')
     plt.close()
 
@@ -100,7 +103,7 @@ def plot_labels(labels, names, save_dir):
 def main():
     #plot_results(file = False, dir ='/home/schober/yolov5/runs/train/yolov5_bdd_no_pretrain_continue_4')
 
-    label_list = glob.glob('/home/schober/yolov5/runs/detect/detect_carla_augmented/labels/*.txt')
+    label_list = glob.glob('/home/schober/yolov5/runs/detect/carla_augmented/labels/*.txt')
     names = ['bicycle', 'bus', 'car', 'motorcycle', 'pedestrian', 'rider', 'traffic light', 'traffic sign', 'train', 'truck']
 
     labels = np.empty(5)
@@ -115,13 +118,36 @@ def main():
             content = f.readlines()
 
         for line in content:
-            confidence = float(line.split()[5])
-            if confidence >= 0.25:
-                c_arr.append(float(line.split()[0]))
-                x_arr.append(float(line.split()[1]))
-                y_arr.append(float(line.split()[2]))
-                w_arr.append(float(line.split()[3]))
-                h_arr.append(float(line.split()[4]))
+            cls = int(line.split()[0])
+            if len(line.split())==6:
+                confidence = float(line.split()[5])
+                if confidence >= 0.25:
+                    if cls == 2:
+                        c_arr.append(0)
+                        x_arr.append(float(line.split()[1]))
+                        y_arr.append(float(line.split()[2]))
+                        w_arr.append(float(line.split()[3]))
+                        h_arr.append(float(line.split()[4]))
+                    elif cls == 4:
+                        c_arr.append(1)
+                        x_arr.append(float(line.split()[1]))
+                        y_arr.append(float(line.split()[2]))
+                        w_arr.append(float(line.split()[3]))
+                        h_arr.append(float(line.split()[4]))
+            else:
+                if cls == 2:
+                    c_arr.append(0)
+                    x_arr.append(float(line.split()[1]))
+                    y_arr.append(float(line.split()[2]))
+                    w_arr.append(float(line.split()[3]))
+                    h_arr.append(float(line.split()[4]))
+                elif cls == 4:
+                    c_arr.append(1)
+                    x_arr.append(float(line.split()[1]))
+                    y_arr.append(float(line.split()[2]))
+                    w_arr.append(float(line.split()[3]))
+                    h_arr.append(float(line.split()[4]))
+
 
     labels = np.column_stack((c_arr, x_arr, y_arr, w_arr, h_arr))
     print(labels)

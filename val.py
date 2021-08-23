@@ -288,10 +288,11 @@ def run(data,
     maps = np.zeros(nc) + map
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
-
+    '''
     if plots:
         labels = np.concatenate(dataset.labels, 0)
         plot_labels(labels, names, save_dir)
+    '''
     return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
 
 
