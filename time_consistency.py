@@ -11,7 +11,7 @@ import seaborn as sns
 from skimage.metrics import structural_similarity as ssim
 gt_list = sorted(glob.glob('/home/schober/carla/for_yolov5/images/carla_rendered_01/*.jpg'))
 aug_list= sorted(glob.glob('/home/schober/carla/for_yolov5/images/carla_01_fest_z/*.png'))
-out_folder = 'output_time_ren_seg/'
+out_folder = 'output_time_final/'
 model = dm.DistModel()
 model.initialize(model='net-lin', net='alex', use_gpu=True)
 ## calculate the tOF
@@ -67,33 +67,51 @@ def main():
         tof, OF_gt, OF_ag, OF_diff = calculate_tOF(gt_0_gray, gt_1_gray, ag_0_gray, ag_1_gray)
         file_name = gt_list[i].split('/')[-1]
         file_name = file_name.split('.')[0]
-        '''
+
         rgb_gt = convert_optical_flow(OF_gt, gt_0)
         rgb_ag = convert_optical_flow(OF_ag, gt_0)
         rgb_diff = convert_optical_flow(OF_diff, gt_0)
-        
+
         cv2.imwrite(out_folder + file_name + 'flow_gt.png', rgb_gt)
         cv2.imwrite(out_folder + file_name + 'flow_ag.png', rgb_ag)
         cv2.imwrite(out_folder + file_name + 'flow_diff.png', rgb_diff)
-        '''
+
         tlp = calculate_tLP(gt_0, gt_1, ag_0, ag_1)
 
         tof_array.append(tof)
         tlp_array.append(tlp)
 
-    np.save('tof_arr_ren_seg.npy' ,tof_array)
-    np.save('tlp_arr_ren_seg.npy', tlp_array)
+    np.save('tof_arr_final.npy' ,tof_array)
+    np.save('tlp_arr_final.npy', tlp_array)
 
-    tof_mean = np.mean(tof_array)
-    tlp_mean = np.mean(tlp_array)
+    tof_mean = "{:.3f}".format(np.mean(tof_array))
+    tlp_mean = "{:.3f}".format(np.mean(tlp_array))
 
+
+    fig, ax1 = plt.subplots()
+
+    color = 'tab:green'
+    ax1.set_xlabel('images')
+    ax1.set_ylabel('tOF-Score', color = color)
+    ax1.plot(tof_array, color = color, lw = 0.5)
+
+    color = 'tab:blue'
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('tLP-Score', color = color)
+    ax2.plot(tlp_array, color = color, lw= 0.5)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.grid()
+    plt.title('Mean tOF = ' + str(tof_mean) + '   Mean tLP = ' + str(tlp_mean))
+    plt.savefig('time_consistency.eps', format = 'eps', dpi = 200)
+    '''
     plt.plot(tof_array, label='tOF', lw=0.5)
-    plt.plot(tlp_array, label='tLP x 100', lw=0.5)
+    plt.plot(tlp_array, label='tLP', lw=0.5)
     plt.xlabel('images')
     plt.legend(loc="upper right")
     plt.title( 'Mean tOF = ' + str(tof_mean) + '   Mean tLP = ' + str(tlp_mean))
     plt.savefig('time_consistency_rendered_augmented.png', dpi=500)
-
+    '''
 
 if __name__ == "__main__":
     main()
